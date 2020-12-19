@@ -92,7 +92,7 @@ static void VirtSpaceMapMemory(VirtSpace* space, kphys_t physical, kvirt_t virtu
 
     kphys_t phys = physical;
     kvirt_t virt = virtual;
-    uint32_t flags = 0;
+    uint32_t flags = PT_FLAG_USERSPACE; // TODO: don't set userspace flag for kernel pages
     if (protection & VIRT_PROT_READONLY)
         flags |= PT_FLAG_PRESENT;
     if (protection & VIRT_PROT_READWRITE)
@@ -139,14 +139,14 @@ VirtSpace* VirtSpaceCreate()
     {
         PageTable* table = space->PageTables + i;
         memset(table, 0, sizeof(PageTable));
-        space->PageDir->Entries[i] = pageTablePhys | PD_FLAG_READWRITE | PD_FLAG_PRESENT; // TODO: userspace flag
+        space->PageDir->Entries[i] = pageTablePhys | PD_FLAG_READWRITE | PD_FLAG_USERSPACE | PD_FLAG_PRESENT; // TODO: don't set userspace flag for kernel pages
         pageTablePhys += KPAGE_SIZE;
     }
 
     for (size_t i = 768; i < 1024; i++)
     {
         PageTable* table = VirtPageTables + i;
-        space->PageDir->Entries[i] = KEARLY_VIRT_TO_PHYS(table) | PD_FLAG_READWRITE | PD_FLAG_PRESENT;
+        space->PageDir->Entries[i] = KEARLY_VIRT_TO_PHYS(table) | PD_FLAG_READWRITE | PD_FLAG_USERSPACE | PD_FLAG_PRESENT; // TODO: don't set userspace flag for kernel pages
     }
 
     return space;

@@ -156,7 +156,7 @@ SchTask* SchCreateTask(const char* name, size_t stackSize, SchTaskFn fn, void* c
     // alloc stack
     size_t stackPages = (stackSize + (KPAGE_SIZE - 1)) / KPAGE_SIZE;
     kphys_t stackPhys = PhysAlloc(stackPages, PHYS_REGION_TYPE_KERNEL_TASK_STACK, "TaskStack");
-    uint8_t* stackVirt = VirtAlloc(stackPhys, stackPages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_TASK_STACK, "TaskStack");
+    uint8_t* stackVirt = VirtAlloc(stackPhys, stackPages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_KERNEL_TASK_STACK, "TaskStack");
     uint8_t* stack = stackVirt;
     memset(stack, 0, stackPages * KPAGE_SIZE);
 

@@ -17,6 +17,9 @@
 #include "interrupts.h"
 #include "drivers/virtio_blk.h"
 
+#include <elf.h>
+#include "embedded.h"
+
 extern int __kernel_beg;
 extern int __kernel_end;
 extern int __kernel_stack_beg;
@@ -24,6 +27,8 @@ extern int __kernel_stack_end;
 
 static uint32_t kmain(void* ctx);
 static uint32_t kmonitor(void* ctx);
+
+typedef int (*umain_t)();
 
 void kinit(uint32_t magic, multiboot_info_t* info)
 {
@@ -213,12 +218,124 @@ static uint32_t test_Consumer(void* ctx)
     return 0;
 }
 
+#pragma pack(push, 1)
+typedef struct tss
+{
+   uint32_t prev_tss;
+   uint32_t esp0; // The stack pointer to load when we change to kernel mode.
+   uint32_t ss0; // The stack segment to load when we change to kernel mode.
+   uint32_t esp1;
+   uint32_t ss1;
+   uint32_t esp2;
+   uint32_t ss2;
+   uint32_t cr3;
+   uint32_t eip;
+   uint32_t eflags;
+   uint32_t eax;
+   uint32_t ecx;
+   uint32_t edx;
+   uint32_t ebx;
+   uint32_t esp;
+   uint32_t ebp;
+   uint32_t esi;
+   uint32_t edi;
+   uint32_t es;         
+   uint32_t cs;        
+   uint32_t ss;        
+   uint32_t ds;        
+   uint32_t fs;       
+   uint32_t gs;         
+   uint32_t ldt;      
+   uint16_t trap;
+   uint16_t iomap_base;
+} tss_t;
+#pragma pack(pop)
+
+extern int __kernel_gdt_beg;
+uint64_t* __kernel_gdt_tss = ((uint64_t*)&__kernel_gdt_beg) + 5;
+uint64_t create_tss_gdt_entry(uint32_t base, uint32_t limit, uint16_t flag)
+{
+    uint64_t descriptor;
+    descriptor  =  limit       & 0x000F0000; // set limit bits 19:16
+    descriptor |= (flag <<  8) & 0x00F0FF00; // set type, p, dpl, s, g, d/b, l and avl fields
+    descriptor |= (base >> 16) & 0x000000FF; // set base bits 23:16
+    descriptor |=  base        & 0xFF000000; // set base bits 31:24
+    descriptor <<= 32;
+    descriptor |= base  << 16;               // set base bits 15:0
+    descriptor |= limit  & 0x0000FFFF;       // set limit bits 15:0
+    return descriptor;
+}
+
+static void ktest_userspace()
+{
+    // Create new virtual address space for usermode process
+    VirtSpace* userspace = VirtSpaceCreate();
+
+    // Load executable ELF image into user address space
+    Elf32_Ehdr* elfHdr = (Elf32_Ehdr*)bin_app_elf;
+    Elf32_Phdr* progHdr = (Elf32_Phdr*)(bin_app_elf + elfHdr->e_phoff);
+    for (size_t i = 0; i < elfHdr->e_phnum; i++)
+    {
+        if (progHdr->p_type == PT_LOAD)
+        {
+            TmPrintf("OFF:%8X VIRT:%8X PHYS:%8X SIZE:%u MSIZE:%u ALIGN:%u\n", progHdr->p_offset, progHdr->p_vaddr, progHdr->p_paddr, progHdr->p_filesz, progHdr->p_memsz, progHdr->p_align);
+
+            size_t pages = KPAGE_COUNT(progHdr->p_memsz);
+            kphys_t phys = PhysAlloc(pages, PHYS_REGION_TYPE_USER_IMAGE, "uimage");
+            VirtSpaceMap(userspace, phys, progHdr->p_vaddr, pages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_USER_IMAGE, "uimage");
+
+            void* kvirt = VirtAlloc(phys, pages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_USER_IMAGE, "uimage-tmp");
+            memset(kvirt, 0, pages * KPAGE_SIZE);
+            memcpy(kvirt, bin_app_elf + progHdr->p_offset, progHdr->p_filesz);
+            VirtFree(kvirt);
+        }
+
+        progHdr = (Elf32_Phdr*)(bin_app_elf + elfHdr->e_phoff + i * elfHdr->e_phentsize);
+    }
+
+    // Create kernel/user stack
+    size_t kuStackSize = 64*1024;
+    size_t kuStackPages = kuStackSize / KPAGE_SIZE;
+    kphys_t kuStackPhys = PhysAlloc(kuStackPages, PHYS_REGION_TYPE_KERNEL_USER_STACK, "ku-stack");
+    uint8_t* kuStack = VirtAlloc(kuStackPhys, kuStackPages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_KERNEL_USER_STACK, "ku-stack");
+    uint8_t* kuStackEnd = kuStack + kuStackSize;
+
+    // Create TSS
+    extern PageDirectory* VirtPageDirectory;
+    tss_t* tss = kcalloc(sizeof(tss_t));
+    tss->esp0 = KVIRT(kuStackEnd);
+    tss->ss0 = 0x10;
+    tss->cr3 = KEARLY_VIRT_TO_PHYS(VirtPageDirectory);
+
+    // Load TSS
+    *__kernel_gdt_tss = create_tss_gdt_entry((uintptr_t)tss, sizeof(tss_t) - 1, 0xE9);
+    extern void kflushtss();
+    kflushtss();
+    
+    // Jump to usermode
+    TmPrintfDbg("Starting userspace program bin/app.elf!\n");
+    VirtSpaceActivate(userspace);
+    {
+        extern void kenterusermode(uintptr_t entrypoint);
+        kenterusermode(elfHdr->e_entry);
+    }
+    VirtSpaceActivate(NULL);
+
+    // TODO: We haven't left usermode though...
+    TmPrintfWrn("Back in kernel!\n");
+}
+
 static uint32_t kmain(void* ctx)
 {
+    ktest_userspace();
+    DbgPanic("ktest_userspace() finished");
+
+    /*
+    // Test PCI stuff
     TmPrintfInf("\nTesting PCI stuff...\n");
     PciInitialize();
   //PciRegisterDiscoverCallback(k_TestAhci, NULL);
-    PciRegisterDiscoverCallback(k_TestVirtio, NULL);
+  //PciRegisterDiscoverCallback(k_TestVirtio, NULL);
     PciDiscoverDevices();
     SchSleep(5000);
 
@@ -237,6 +354,7 @@ static uint32_t kmain(void* ctx)
     SchCreateTask("consumer1", 64*1024, test_Consumer, NULL);
     SchCreateTask("consumer2", 64*1024, test_Consumer, NULL);
     SchCreateTask("consumer3", 64*1024, test_Consumer, NULL);
+    */
 
     return 0;
 }

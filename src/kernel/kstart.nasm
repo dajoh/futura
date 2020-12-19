@@ -78,10 +78,13 @@ __kernel_idt_ptr:
 align 8 ; The base address of the GDT should be aligned on an eight-byte boundary to yield the best processor performance.
 __kernel_gdt_beg:
     dq 0x0000000000000000
-    dq 0x00CF9A000000FFFF
-    dq 0x00CF92000000FFFF
+    dq 0x00CF9A000000FFFF ; Kernel code segment
+    dq 0x00CF92000000FFFF ; Kernel data segment
+    dq 0x00CFFA000000FFFF ; User code segment
+    dq 0x00CFF2000000FFFF ; User data segment
+    dq 0x0000000000000000 ; TSS
 __kernel_gdt_ptr:
-    dw 23
+    dw 47
     dd __kernel_gdt_beg
 
 ; Entry point
@@ -133,6 +136,35 @@ kstart:
 .hang:
     hlt
     jmp .hang
+
+; ----------------------------------
+; kflushtss
+; ----------------------------------
+[global kflushtss]
+kflushtss:
+    mov ax, 0x2B
+    ltr ax
+    ret
+
+; ----------------------------------
+; kenterusermode
+; ----------------------------------
+[global kenterusermode]
+kenterusermode:
+    cli
+    mov ax, 0x23
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    mov eax, esp
+    push 0x23
+    push eax
+    pushf
+    push 0x1b
+    push dword [esp + 20]
+    iret
 
 ; ----------------------------------
 ; SchSwitchTask

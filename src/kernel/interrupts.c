@@ -18,7 +18,7 @@ typedef struct
    uint32_t ds;
    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
    uint32_t interrupt, errcode;
-   uint32_t eip, cs, eflags, useresp, ss; // VERIFY: do useresp and ss really get set?
+   uint32_t eip, cs, eflags, useresp, userss;
 } InterruptContext;
 
 typedef struct
@@ -81,7 +81,7 @@ void IntCommonHandler(InterruptContext ctx)
         TmPrintf("GENERAL PROTECTION FAULT\n");
         TmPrintf("eip=%p  eflags=%p task=%d\n", ctx.eip, ctx.eflags, SchCurrentTask ? SchCurrentTask->id : 0);
         TmPrintf("int=%p  err=%p  uesp=%p\n", ctx.interrupt, ctx.errcode, ctx.useresp);
-        TmPrintf("cs=%p   ds=%p   ss=%p\n", ctx.cs, ctx.ds, ctx.ss);
+        TmPrintf("cs=%p   ds=%p   uss=%p\n", ctx.cs, ctx.ds, ctx.userss);
         TmPrintf("eax=%p  ebx=%p  ecx=%p  edx=%p\n", ctx.eax, ctx.ebx, ctx.ecx, ctx.edx);
         TmPrintf("ebp=%p  esp=%p  edi=%p  esi=%p\n", ctx.ebp, ctx.esp, ctx.edi, ctx.esi);
         DbgPanic("GP fault");
@@ -97,7 +97,7 @@ void IntCommonHandler(InterruptContext ctx)
             TmPrintf("PAGE FAULT: address %p\n", addr);
             TmPrintf("eip=%p  eflags=%p task=%d\n", ctx.eip, ctx.eflags, taskId);
             TmPrintf("int=%p  err=%p  uesp=%p\n", ctx.interrupt, ctx.errcode, ctx.useresp);
-            TmPrintf("cs=%p   ds=%p   ss=%p\n", ctx.cs, ctx.ds, ctx.ss);
+            TmPrintf("cs=%p   ds=%p   uss=%p\n", ctx.cs, ctx.ds, ctx.userss);
             TmPrintf("eax=%p  ebx=%p  ecx=%p  edx=%p\n", ctx.eax, ctx.ebx, ctx.ecx, ctx.edx);
             TmPrintf("ebp=%p  esp=%p  edi=%p  esi=%p\n", ctx.ebp, ctx.esp, ctx.edi, ctx.esi);
             TmPopColor();
@@ -125,6 +125,10 @@ void IntCommonHandler(InterruptContext ctx)
     else if (ctx.interrupt == INTXX_APIC_IRQ1)
     {
         TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_BLACK, "[INT%02Xh] Got keyboard scancode: 0x%02X\n", ctx.interrupt & 0xFF, inb(0x60));
+    }
+    else if (ctx.interrupt == 0x80)
+    {
+        TmPutString((const char*)ctx.ebx);
     }
     else if (!handled)
     {
@@ -368,7 +372,7 @@ void IntInitialize()
     IntSetHandler(125, Isr7D, 0x08, 0x8E);
     IntSetHandler(126, Isr7E, 0x08, 0x8E);
     IntSetHandler(127, Isr7F, 0x08, 0x8E);
-    IntSetHandler(128, Isr80, 0x08, 0x8E);
+    IntSetHandler(128, Isr80, 0x08, 0xEE);
     IntSetHandler(129, Isr81, 0x08, 0x8E);
     IntSetHandler(130, Isr82, 0x08, 0x8E);
     IntSetHandler(131, Isr83, 0x08, 0x8E);

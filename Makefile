@@ -170,5 +170,8 @@ obj/kernel/memory_kheap.o: src/kernel/memory_kheap.c
 obj/kernel/memory_vspace.o: src/kernel/memory_vspace.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
-bin/kernel.elf: obj/kernel/kstart.o obj/kernel/kmain.o obj/kernel/textmode.o obj/kernel/comport.o obj/kernel/memory.o obj/kernel/memory_phys.o obj/kernel/memory_virt.o obj/kernel/memory_kheap.o obj/kernel/memory_vspace.o obj/kernel/interrupts.o obj/kernel/irql.o obj/kernel/isr.o obj/kernel/pic.o obj/kernel/apic.o obj/kernel/ioapic.o obj/kernel/pit.o obj/kernel/tsc.o obj/kernel/scheduler.o obj/kernel/bitmap.o obj/kernel/debug.o obj/kernel/heap.o obj/kernel/acpiosl.o obj/kernel/pci.o obj/kernel/drivers/virtio.o obj/kernel/drivers/virtio_blk.o bin/kstdlib.a bin/libacpi.a
+obj/kernel/embedded.o: src/kernel/embedded.c
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
+bin/kernel.elf: obj/kernel/kstart.o obj/kernel/kmain.o obj/kernel/embedded.o obj/kernel/textmode.o obj/kernel/comport.o obj/kernel/memory.o obj/kernel/memory_phys.o obj/kernel/memory_virt.o obj/kernel/memory_kheap.o obj/kernel/memory_vspace.o obj/kernel/interrupts.o obj/kernel/irql.o obj/kernel/isr.o obj/kernel/pic.o obj/kernel/apic.o obj/kernel/ioapic.o obj/kernel/pit.o obj/kernel/tsc.o obj/kernel/scheduler.o obj/kernel/bitmap.o obj/kernel/debug.o obj/kernel/heap.o obj/kernel/acpiosl.o obj/kernel/pci.o obj/kernel/drivers/virtio.o obj/kernel/drivers/virtio_blk.o bin/kstdlib.a bin/libacpi.a
 	$(CC) -T src/kernel/kernel.ld $(LDFLAGS) -o $@ $^ -lgcc

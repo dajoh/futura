@@ -48,7 +48,7 @@ void VirtInitializeEarly()
     for (size_t i = 0; i < 1024; i++)
     {
         PageTable* table = VirtPageTables + i;
-        VirtPageDirectory->Entries[i] = KEARLY_VIRT_TO_PHYS(table) | PD_FLAG_READWRITE | PD_FLAG_PRESENT;
+        VirtPageDirectory->Entries[i] = KEARLY_VIRT_TO_PHYS(table) | PD_FLAG_READWRITE | PD_FLAG_USERSPACE | PD_FLAG_PRESENT; // TODO: don't set userspace flag for kernel pages
         memset(table, 0, sizeof(PageTable));
     }
 
@@ -95,7 +95,7 @@ void VirtMapMemory(kphys_t physical, kvirt_t virtual, size_t pages, int protecti
 {
     kphys_t phys = physical;
     kvirt_t virt = virtual;
-    uint32_t flags = 0;
+    uint32_t flags = PT_FLAG_USERSPACE; // TODO: don't set userspace flag for kernel pages
     if (protection & VIRT_PROT_READONLY)
         flags |= PT_FLAG_PRESENT;
     if (protection & VIRT_PROT_READWRITE)
