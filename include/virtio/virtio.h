@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include "virtio_ring.h"
-#include "virtio_blk.h"
 #include "virtio_pci.h"
+#include "virtio_blk.h"
+#include "virtio_gpu.h"
 
 // Device status bits
 #define VIRTIO_CONFIG_S_ACKNOWLEDGE  1   /* We have seen device and processed generic fields (VIRTIO_CONFIG_F_VIRTIO) */

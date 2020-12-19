@@ -3,7 +3,7 @@ AR = i686-elf-ar
 GDB = gdb
 NASM = nasm
 QEMU = qemu-system-i386.exe
-CFLAGS = -ffreestanding -ggdb -Wall -Wextra -Wno-unused-parameter -Iinclude -Iinclude/kstdlib -Iinclude/acpi -D_FUTURA
+CFLAGS = -ffreestanding -ggdb -Wall -Wextra -Wno-unused-parameter -Iinclude -Iinclude/kstdlib -Iinclude/acpi -D_FUTURA -DLODEPNG_NO_COMPILE_DISK -DLODEPNG_NO_COMPILE_ALLOCATORS -DKERNEL_RELEASE_HEAPALLOC
 LDFLAGS = -ffreestanding -ggdb -nostdlib
 NASMFLAGS = -felf32 -g
 
@@ -155,6 +155,12 @@ obj/kernel/drivers/virtio.o: src/kernel/drivers/virtio.c
 obj/kernel/drivers/virtio_blk.o: src/kernel/drivers/virtio_blk.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
+obj/kernel/drivers/virtio_gpu.o: src/kernel/drivers/virtio_gpu.c
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
+obj/kernel/fbcon.o: src/kernel/fbcon.c
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
 obj/kernel/memory.o: src/kernel/memory.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
@@ -170,5 +176,11 @@ obj/kernel/memory_kheap.o: src/kernel/memory_kheap.c
 obj/kernel/memory_vspace.o: src/kernel/memory_vspace.c
 	$(CC) -c $^ -o $@ $(CFLAGS)
 
-bin/kernel.elf: obj/kernel/kstart.o obj/kernel/kmain.o obj/kernel/textmode.o obj/kernel/comport.o obj/kernel/memory.o obj/kernel/memory_phys.o obj/kernel/memory_virt.o obj/kernel/memory_kheap.o obj/kernel/memory_vspace.o obj/kernel/interrupts.o obj/kernel/irql.o obj/kernel/isr.o obj/kernel/pic.o obj/kernel/apic.o obj/kernel/ioapic.o obj/kernel/pit.o obj/kernel/tsc.o obj/kernel/scheduler.o obj/kernel/bitmap.o obj/kernel/debug.o obj/kernel/heap.o obj/kernel/acpiosl.o obj/kernel/pci.o obj/kernel/drivers/virtio.o obj/kernel/drivers/virtio_blk.o bin/kstdlib.a bin/libacpi.a
+obj/kernel/lodepng.o: src/kernel/lodepng.c
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
+obj/kernel/embedded.o: src/kernel/embedded.c
+	$(CC) -c $^ -o $@ $(CFLAGS)
+
+bin/kernel.elf: obj/kernel/kstart.o obj/kernel/kmain.o obj/kernel/textmode.o obj/kernel/comport.o obj/kernel/memory.o obj/kernel/memory_phys.o obj/kernel/memory_virt.o obj/kernel/memory_kheap.o obj/kernel/memory_vspace.o obj/kernel/interrupts.o obj/kernel/irql.o obj/kernel/isr.o obj/kernel/pic.o obj/kernel/apic.o obj/kernel/ioapic.o obj/kernel/pit.o obj/kernel/tsc.o obj/kernel/scheduler.o obj/kernel/bitmap.o obj/kernel/debug.o obj/kernel/heap.o obj/kernel/acpiosl.o obj/kernel/pci.o obj/kernel/drivers/virtio.o obj/kernel/drivers/virtio_blk.o obj/kernel/drivers/virtio_gpu.o obj/kernel/fbcon.o obj/kernel/lodepng.o obj/kernel/embedded.o bin/kstdlib.a bin/libacpi.a
 	$(CC) -T src/kernel/kernel.ld $(LDFLAGS) -o $@ $^ -lgcc

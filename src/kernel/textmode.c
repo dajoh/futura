@@ -6,6 +6,7 @@
 #include "lowlevel.h"
 #include "textmode.h"
 #include "interrupts.h"
+#include "fbcon.h"
 
 static int TmX;
 static int TmY;
@@ -51,12 +52,24 @@ void TmInitialize()
 
 void TmClear()
 {
+    if (ConIsInitialized())
+    {
+        ConClear(TmColor);
+        return;
+    }
+
     TmX = 0;
     TmY = 0;
     for (int y = 0; y < TM_SCREEN_H; y++)
     for (int x = 0; x < TM_SCREEN_W; x++)
         TmVideoMemory[y * TM_SCREEN_W + x] = ' ' | (TmColor << 8);
     TmUpdateCursor();
+}
+
+void TmGetPos(int* x, int* y)
+{
+    if (x) *x = TmX;
+    if (y) *y = TmY;
 }
 
 void TmSetColor(int fg, int bg)
@@ -135,11 +148,23 @@ static void TmPutCharEx(char chr, bool updateCursor)
 
 void TmPutChar(char chr)
 {
+    if (ConIsInitialized())
+    {
+        ConPutChar(chr, TmColor);
+        return;
+    }
+
     TmPutCharEx(chr, true);
 }
 
 void TmPutString(const char* str)
 {
+    if (ConIsInitialized())
+    {
+        ConPutString(str, TmColor);
+        return;
+    }
+
     uint32_t irqLock = IntEnterCriticalSection();
     while (*str)
         TmPutCharEx(*str++, false);

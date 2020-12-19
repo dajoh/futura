@@ -27,6 +27,7 @@
 
 void TmInitialize();
 void TmClear();
+void TmGetPos(int* x, int* y);
 void TmSetColor(int fg, int bg);
 void TmGetColor(int* fg, int* bg);
 void TmPushColor(int fg, int bg);

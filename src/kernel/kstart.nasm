@@ -14,7 +14,7 @@ kboot:
     ; Build two page tables (2048 entries)
     mov esi, 0
     mov edi, page_table0
-    mov ecx, 2048
+    mov ecx, 3072
 .loop:
     mov [edi], esi
     or dword [edi], 3
@@ -25,8 +25,10 @@ kboot:
 	; Map the page tables to both virtual addresses 0x00000000 and 0xC0000000
 	mov dword [page_dir + 0 * 4], (page_table0 + 0x003)
 	mov dword [page_dir + 1 * 4], (page_table1 + 0x003)
+	mov dword [page_dir + 2 * 4], (page_table2 + 0x003)
 	mov dword [page_dir + 768 * 4], (page_table0 + 0x003)
 	mov dword [page_dir + 769 * 4], (page_table1 + 0x003)
+	mov dword [page_dir + 770 * 4], (page_table2 + 0x003)
 
 	; Set cr3 to the address of the page_dir
 	mov ecx, page_dir
@@ -54,6 +56,8 @@ page_dir:
 page_table0:
     times 4096 db 0
 page_table1:
+    times 4096 db 0
+page_table2:
     times 4096 db 0
 
 ; Stack

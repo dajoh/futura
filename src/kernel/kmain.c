@@ -16,6 +16,7 @@
 #include "scheduler.h"
 #include "interrupts.h"
 #include "drivers/virtio_blk.h"
+#include "drivers/virtio_gpu.h"
 
 extern int __kernel_beg;
 extern int __kernel_end;
@@ -24,6 +25,22 @@ extern int __kernel_stack_end;
 
 static uint32_t kmain(void* ctx);
 static uint32_t kmonitor(void* ctx);
+
+void* lodepng_malloc(size_t size)
+{
+    return kalloc(size);
+}
+
+void* lodepng_realloc(void* ptr, size_t new_size)
+{
+    return krealloc(ptr, new_size);
+}
+
+void lodepng_free(void* ptr)
+{
+    if (ptr)
+        kfree(ptr);
+}
 
 void kinit(uint32_t magic, multiboot_info_t* info)
 {
@@ -130,7 +147,7 @@ static void k_TestAhci(const PciDeviceInfo* info, void* ctx)
     VmmMapMemory((void*)ahci, (void*)ahci, 2, VIRT_PROT_READWRITE | VIRT_PROT_NOCACHE, "AHCI");*/
 }
 
-static void k_TestVirtio(const PciDeviceInfo* info, void* ctx)
+static void k_TestVirtioBlk(const PciDeviceInfo* info, void* ctx)
 {
     // Create device
     DrvVirtioBlk* drv = DrvVirtioBlk_Create(info);
@@ -146,6 +163,7 @@ static void k_TestVirtio(const PciDeviceInfo* info, void* ctx)
     // ---------------------------------------------
     // Read a couple of sectors synchronously
     // ---------------------------------------------
+    for (size_t i = 0; i < 256; i++)
     {
         uint8_t buf[512];
         DbgAssert(DrvVirtioBlk_Read(drv, 0, buf, sizeof(buf)) == sizeof(buf)); DbgHexdump(buf, 32); TmPutChar('\n');
@@ -213,15 +231,41 @@ static uint32_t test_Consumer(void* ctx)
     return 0;
 }
 
+static void k_TestVirtioGpu(const PciDeviceInfo* info, void* ctx)
+{
+    // Create device
+    DrvVirtioGpu* gpu = DrvVirtioGpu_Create(info);
+    if (!gpu)
+        return;
+
+    // Initialize device
+    if (!DrvVirtioGpu_Start(gpu))
+        return;
+}
+
 static uint32_t kmain(void* ctx)
 {
     TmPrintfInf("\nTesting PCI stuff...\n");
     PciInitialize();
   //PciRegisterDiscoverCallback(k_TestAhci, NULL);
-    PciRegisterDiscoverCallback(k_TestVirtio, NULL);
+  //PciRegisterDiscoverCallback(k_TestVirtioBlk, NULL);
+    PciRegisterDiscoverCallback(k_TestVirtioGpu, NULL);
     PciDiscoverDevices();
-    SchSleep(5000);
 
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_BLUE, "hello test\n");
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_RED, "hello hello hello\n");
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_YELLOW, "hello test\n");
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_GREEN, "hello\n");
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_DKGRAY, "hello hello\n");
+    TmColorPrintf(TM_COLOR_BLACK, TM_COLOR_LTGRAY, "hello test hello test hello\n");
+    TmColorPrintf(TM_COLOR_BLACK, TM_COLOR_CYAN, "hello !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    TmColorPrintf(TM_COLOR_MAGENTA, TM_COLOR_RED, "hello hello\n");
+    TmColorPrintf(TM_COLOR_BLUE, TM_COLOR_GREEN, "hello hello can you see test hello\n");
+    TmColorPrintf(TM_COLOR_RED, TM_COLOR_YELLOW, "hello hello god\n");
+    TmColorPrintf(TM_COLOR_DKGRAY, TM_COLOR_CYAN, "hello test hello hello\n");
+    TmColorPrintf(TM_COLOR_WHITE, TM_COLOR_MAGENTA, "hello hello hello test hello hello\n");
+
+    /*
     TmPrintfInf("\nTesting IRQL stuff...\n");
     IrqlSetCurrent(IRQL_DEVICE_LO);
     for (int i = 0; i < 5; i++)
@@ -230,6 +274,7 @@ static uint32_t kmain(void* ctx)
         SchStall(1000 * 1000);
     }
     IrqlSetCurrent(IRQL_STANDARD);
+    */
 
     TmPrintfInf("\nTesting scheduler queue primitive...\n");
     test_Queue = SchCreateQueue();

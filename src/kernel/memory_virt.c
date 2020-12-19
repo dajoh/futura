@@ -41,7 +41,7 @@ void VirtInitializeEarly()
     VirtPageDirectory = (PageDirectory*)KEARLY_PHYS_TO_VIRT(PhysAlloc(1025, PHYS_REGION_TYPE_KERNEL_PAGE_DIR, "vmm tables"));
     VirtPageTables = (PageTable*)(VirtPageDirectory + 1);
 
-    if (KVIRT(VirtPageDirectory+1025) > 0xC0800000)
+    if (KVIRT(VirtPageDirectory+1025) > 0xC0C00000)
         // you can increase this limit by adding more early page tables
         DbgPanic("new page tables not completely mapped by early page tables");
 
