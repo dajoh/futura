@@ -158,5 +158,7 @@
 #define COMPILER_DEPENDENT_UINT64   unsigned long long
 #define ACPI_USE_LOCAL_CACHE
 #define ACPI_USE_NATIVE_DIVIDE
+#define ACPI_USE_SYSTEM_CLIBRARY
+#define ACPI_USE_STANDARD_HEADERS
 
 #endif /* __ACFUTURA_H__ */

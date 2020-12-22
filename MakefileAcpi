@@ -1,11 +1,17 @@
 CC = i686-elf-gcc
 AR = i686-elf-ar
-CFLAGS = -ffreestanding -ggdb -Iinclude -Iinclude/acpi -D_FUTURA
+CFLAGS = -ffreestanding -ggdb -Iinclude -Iinclude/kstdlib -Iinclude/acpi -D_FUTURA
 
 SOURCES := $(shell find src/acpi -name '*.c')
 OBJECTS := $(patsubst src/%.c,obj/%.o,$(SOURCES))
 
+.PHONY: all clean
+
 all: bin/libacpi.a
+
+clean:
+	rm -rf bin/libacpi.a
+	find . -wholename './obj/acpi/*.o' -delete
 
 bin/libacpi.a: $(OBJECTS) | bin/
 	$(AR) rcs $@ $^
