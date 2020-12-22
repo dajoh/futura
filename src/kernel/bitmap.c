@@ -12,7 +12,7 @@ size_t BitmapCalcSize(size_t bits)
 Bitmap* BitmapInitialize(void* mem, size_t bits)
 {
 	Bitmap* bmp = (Bitmap*)mem;
-	k_memset(bmp, 0, BitmapCalcSize(bits));
+	memset(bmp, 0, BitmapCalcSize(bits));
 	bmp->Size = bits;
 	return bmp;
 }

@@ -18,7 +18,7 @@ static void TmScroll()
 {
     uint16_t* firstLine = &TmVideoMemory[0];
     uint16_t* secondLine = &TmVideoMemory[TM_SCREEN_W];
-    k_memmove(firstLine, secondLine, sizeof(uint16_t) * TM_SCREEN_W * (TM_SCREEN_H - 1));
+    memmove(firstLine, secondLine, sizeof(uint16_t) * TM_SCREEN_W * (TM_SCREEN_H - 1));
 
     uint16_t* lastLine = &TmVideoMemory[TM_SCREEN_W * (TM_SCREEN_H - 1)];
     for (int x = 0; x < TM_SCREEN_W; x++)
@@ -158,7 +158,7 @@ void TmPrintf(const char* fmt, ...)
 void TmVPrintf(const char* fmt, va_list args)
 {
     char buf[2048];
-    k_vsnprintf(buf, sizeof(buf), fmt, args);
+    vsnprintf(buf, sizeof(buf), fmt, args);
     TmPutString(buf);
 }
 

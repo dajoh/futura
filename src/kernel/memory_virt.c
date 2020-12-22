@@ -49,7 +49,7 @@ void VirtInitializeEarly()
     {
         PageTable* table = VirtPageTables + i;
         VirtPageDirectory->Entries[i] = KEARLY_VIRT_TO_PHYS(table) | PD_FLAG_READWRITE | PD_FLAG_PRESENT;
-        k_memset(table, 0, sizeof(PageTable));
+        memset(table, 0, sizeof(PageTable));
     }
 
     kvirt_t kernelBeg = KVIRT(&__kernel_beg);

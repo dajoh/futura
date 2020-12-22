@@ -12,7 +12,7 @@ void DbgPanicImpl(const char* file, int line, const char* fmt, ...)
 
 	va_list args;
 	va_start(args, fmt);
-	k_vsnprintf(DbgPanicBuffer, sizeof(DbgPanicBuffer), fmt, args);
+	vsnprintf(DbgPanicBuffer, sizeof(DbgPanicBuffer), fmt, args);
 	va_end(args);
 
 	TmSetColor(TM_COLOR_LTRED, TM_COLOR_BLACK);
@@ -45,7 +45,7 @@ void DbgAssertMsgImpl(const char* file, int line, const char* expr, const char* 
 	{
 		va_list args;
 		va_start(args, fmt);
-		k_vsnprintf(DbgPanicBuffer, sizeof(DbgPanicBuffer), fmt, args);
+		vsnprintf(DbgPanicBuffer, sizeof(DbgPanicBuffer), fmt, args);
 		va_end(args);
 
 		int fg, bg;
@@ -85,7 +85,7 @@ void DbgHexdump(void* ptr, size_t size)
 			{
 				uint8_t* cur = mem + off + i;
 				if (cur < end)
-					TmPutChar(k_isprint(*cur) ? *cur : '.');
+					TmPutChar(isprint(*cur) ? *cur : '.');
 				else
 					break;
 			}

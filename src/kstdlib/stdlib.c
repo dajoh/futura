@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-static inline bool k_isbasedigit(char c, int base)
+static inline bool isbasedigit(char c, int base)
 {
 	if (base <= 10)
 		return c >= '0' && c <= '9' - (10 - base);
@@ -15,7 +15,7 @@ static inline bool k_isbasedigit(char c, int base)
 		   (c >= 'A' && c <= 'Z' - (36 - base));
 }
 
-static inline unsigned int k_basedigitvalue(char c)
+static inline unsigned int basedigitvalue(char c)
 {
 	if (c >= '0' && c <= '9')
 		return (unsigned int)c - '0';
@@ -26,7 +26,7 @@ static inline unsigned int k_basedigitvalue(char c)
 	return 0;
 }
 
-static bool k_strtox(const char* str, int base, char* psign, uintmax_t* num, const char** end)
+static bool strtox(const char* str, int base, char* psign, uintmax_t* num, const char** end)
 {
 	// validate base
 	if (base != 0 && (base < 2 || base > 36))
@@ -39,7 +39,7 @@ static bool k_strtox(const char* str, int base, char* psign, uintmax_t* num, con
 	const char* ptr = str;
 
 	// Discards any whitespace characters (as identified by calling isspace()) until the first non-whitespace character is found
-	while (k_isspace(*ptr))
+	while (isspace(*ptr))
 		ptr++;
 
 	// (optional) plus or minus sign
@@ -71,7 +71,7 @@ static bool k_strtox(const char* str, int base, char* psign, uintmax_t* num, con
 
 	// a sequence of digits
 	const char* beg = ptr;
-	while (k_isbasedigit(*ptr, base))
+	while (isbasedigit(*ptr, base))
 		ptr++;
 
 	// no digits?
@@ -87,12 +87,12 @@ static bool k_strtox(const char* str, int base, char* psign, uintmax_t* num, con
 	const char* digit = beg;
 	do
 	{
-		uintmax_t next = ret * (unsigned int)base + k_basedigitvalue(*digit++);
+		uintmax_t next = ret * (unsigned int)base + basedigitvalue(*digit++);
 
         // check for overflow
 		if (next <= ret)
 		{
-			k_errno = ERANGE;
+			errno = ERANGE;
 			*num = UINTMAX_MAX;
 			*end = ptr;
 			return false;
@@ -106,12 +106,12 @@ static bool k_strtox(const char* str, int base, char* psign, uintmax_t* num, con
 	return true;
 }
 
-long k_strtol(const char* str, char** str_end, int base)
+long strtol(const char* str, char** str_end, int base)
 {
 	char sign;
 	uintmax_t num;
 	const char* end;
-	bool ret = k_strtox(str, base, &sign, &num, &end);
+	bool ret = strtox(str, base, &sign, &num, &end);
 
 	if (str_end)
 		*str_end = (char*)end;
@@ -123,24 +123,24 @@ long k_strtol(const char* str, char** str_end, int base)
 	{
 		if (num <= (uintmax_t)LONG_MAX)
 			return (long)num;
-		k_errno = ERANGE;
+		errno = ERANGE;
 		return LONG_MAX;
 	}
 	else
 	{
 		if (num <= (uintmax_t)LONG_MAX + 1ull)
 			return (long)-(intmax_t)num;
-		k_errno = ERANGE;
+		errno = ERANGE;
 		return LONG_MIN;
 	}
 }
 
-long long k_strtoll(const char* str, char** str_end, int base)
+long long strtoll(const char* str, char** str_end, int base)
 {
 	char sign;
 	uintmax_t num;
 	const char* end;
-	bool ret = k_strtox(str, base, &sign, &num, &end);
+	bool ret = strtox(str, base, &sign, &num, &end);
 
 	if (str_end)
 		*str_end = (char*)end;
@@ -152,24 +152,24 @@ long long k_strtoll(const char* str, char** str_end, int base)
 	{
 		if (num <= (uintmax_t)LLONG_MAX)
 			return (long long)num;
-		k_errno = ERANGE;
+		errno = ERANGE;
 		return LLONG_MAX;
 	}
 	else
 	{
 		if (num <= (uintmax_t)LLONG_MAX + 1ull)
 			return (long long)-(intmax_t)num;
-		k_errno = ERANGE;
+		errno = ERANGE;
 		return LLONG_MIN;
 	}
 }
 
-unsigned long k_strtoul(const char* str, char** str_end, int base)
+unsigned long strtoul(const char* str, char** str_end, int base)
 {
 	char sign;
 	uintmax_t num;
 	const char* end;
-	bool ret = k_strtox(str, base, &sign, &num, &end);
+	bool ret = strtox(str, base, &sign, &num, &end);
 
 	if (str_end)
 		*str_end = (char*)end;
@@ -179,7 +179,7 @@ unsigned long k_strtoul(const char* str, char** str_end, int base)
 
 	if (num > (uintmax_t)ULONG_MAX)
 	{
-		k_errno = ERANGE;
+		errno = ERANGE;
 		return ULONG_MAX;
 	}
 	
@@ -189,12 +189,12 @@ unsigned long k_strtoul(const char* str, char** str_end, int base)
 		return (unsigned long)-(long)(unsigned long)num;
 }
 
-unsigned long long k_strtoull(const char* str, char** str_end, int base)
+unsigned long long strtoull(const char* str, char** str_end, int base)
 {
 	char sign;
 	uintmax_t num;
 	const char* end;
-	bool ret = k_strtox(str, base, &sign, &num, &end);
+	bool ret = strtox(str, base, &sign, &num, &end);
 
 	if (str_end)
 		*str_end = (char*)end;

@@ -43,7 +43,7 @@ void* internal_kcalloc(size_t size)
 {
     void* mem = kalloc(size);
     if (mem)
-        k_memset(mem, 0, size);
+        memset(mem, 0, size);
     return mem;
 }
 
@@ -51,7 +51,7 @@ void* internal_kcalloc_aligned(size_t size, size_t align)
 {
     void* mem = kalloc_aligned(size, align);
     if (mem)
-        k_memset(mem, 0, size);
+        memset(mem, 0, size);
     return mem;
 }
 
@@ -125,9 +125,9 @@ void* kalloc(size_t size)
     uint8_t* guard1 = internal_kalloc(size + KHEAP_DBG_GUARD_BYTES);
     uint8_t* center = guard1 + KHEAP_DBG_HALF_GUARD_BYTES;
     uint8_t* guard2 = center + size;
-    k_memset(guard1, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
-    k_memset(center, KHEAP_DBG_INIT_BYTE, size);
-    k_memset(guard2, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
+    memset(guard1, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
+    memset(center, KHEAP_DBG_INIT_BYTE, size);
+    memset(guard2, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
     return center;
 }
 
@@ -142,9 +142,9 @@ void* kcalloc(size_t size)
     uint8_t* guard1 = internal_kalloc(size + KHEAP_DBG_GUARD_BYTES);
     uint8_t* center = guard1 + KHEAP_DBG_HALF_GUARD_BYTES;
     uint8_t* guard2 = center + size;
-    k_memset(guard1, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
-    k_memset(center, 0, size);
-    k_memset(guard2, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
+    memset(guard1, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
+    memset(center, 0, size);
+    memset(guard2, KHEAP_DBG_GUARD_BYTE, KHEAP_DBG_HALF_GUARD_BYTES);
     return center;
 }
 

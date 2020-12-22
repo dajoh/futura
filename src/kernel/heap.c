@@ -65,12 +65,12 @@ Heap* HeapInitialize(void* mem, size_t size)
 
 	// Setup first free block
 	block->Size = size - sizeof(Heap) - sizeof(HeapBlock);
-	k_memcpy(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature));
+	memcpy(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature));
 	block->Next = NULL;
 	block->Prev = NULL;
 
 	// Setup heap header
-	k_memcpy(heap->Signature, HEAP_SIG_HEAP_HEADER, sizeof(heap->Signature));
+	memcpy(heap->Signature, HEAP_SIG_HEAP_HEADER, sizeof(heap->Signature));
 	heap->Size = size;
 	heap->UsedBlocks = 0;
 	heap->FreeBlocks = 1;
@@ -136,8 +136,8 @@ void HeapDebugDump(Heap* heap)
 	{
 		HeapBlock* next = (HeapBlock*)((uint8_t*)(block + 1) + block->Size);
 		const char* type = "CORRUPT";
-		if (k_memcmp(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature)) == 0) type = "Used";
-		if (k_memcmp(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature)) == 0) type = "Available";
+		if (memcmp(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature)) == 0) type = "Used";
+		if (memcmp(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature)) == 0) type = "Available";
 		TmPrintf("%08X | %08X | %8u | %s\n", block, next, block->Size, type);
 		block = next;
 	} while (block < heapEnd);
@@ -191,14 +191,14 @@ void* HeapAlloc(Heap* heap, size_t size)
 		heap->BytesAvailable -= size;
 
 		// Setup used block
-		k_memcpy(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature));
+		memcpy(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature));
 		return (HeapBlock*)block + 1;
 	}
 
 	// Create new free block
 	HeapFreeBlock* newFreeBlock = (HeapFreeBlock*)((uint8_t*)block + size + sizeof(HeapBlock));
 	newFreeBlock->Size = slack - sizeof(HeapBlock);
-	k_memcpy(newFreeBlock->Signature, HEAP_SIG_FREE_BLOCK, sizeof(newFreeBlock->Signature));
+	memcpy(newFreeBlock->Signature, HEAP_SIG_FREE_BLOCK, sizeof(newFreeBlock->Signature));
 	newFreeBlock->Next = block->Next;
 	newFreeBlock->Prev = block->Prev;
 
@@ -220,7 +220,7 @@ void* HeapAlloc(Heap* heap, size_t size)
 
 	// Setup used block
 	block->Size = size;
-	k_memcpy(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature));
+	memcpy(block->Signature, HEAP_SIG_USED_BLOCK, sizeof(block->Signature));
 	return (HeapBlock*)block + 1;
 }
 
@@ -237,7 +237,7 @@ void* HeapRealloc(Heap* heap, void* ptr, size_t size)
 	if (!mem)
 		return NULL;
 
-	k_memcpy(mem, ptr, len);
+	memcpy(mem, ptr, len);
 	HeapFree(heap, ptr);
 	return mem;
 }
@@ -251,7 +251,7 @@ void HeapFree(Heap* heap, void* ptr)
 		return;
 
 	// convert block
-	k_memcpy(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature));
+	memcpy(block->Signature, HEAP_SIG_FREE_BLOCK, sizeof(block->Signature));
 	block->Next = NULL;
 	block->Prev = NULL;
 

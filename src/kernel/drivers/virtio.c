@@ -15,7 +15,7 @@ bool DrvVirtioCreate(DrvVirtio* drv, const PciDeviceInfo* pciInfo)
     uint32_t bus = pciInfo->Bus;
     uint32_t device = pciInfo->Device;
     uint32_t function = pciInfo->Function;
-    k_memset(drv, 0, sizeof(DrvVirtio));
+    memset(drv, 0, sizeof(DrvVirtio));
 
     drv->DeviceType = pciInfo->DeviceId == 0x1001 ? DRV_VIRTIO_DEVICE_TYPE_BLK : DRV_VIRTIO_DEVICE_TYPE_GPU;
     drv->PciVendorId = pciInfo->VendorId;
@@ -166,7 +166,7 @@ bool DrvVirtioStart(DrvVirtio* drv, uint32_t reqFeatures[2], uint32_t optFeature
         // Allocate memory for queue
         kphys_t queuePhys = PhysAlloc(pageCount, PHYS_REGION_TYPE_HARDWARE, "virtq");
         uint8_t* queueMemory = VirtAlloc(queuePhys, pageCount, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_HARDWARE, "virtq");
-        k_memset(queueMemory, 0, totalSize);
+        memset(queueMemory, 0, totalSize);
 
         // Setup queue memory
         vring* ring = &drv->Queues[i];

@@ -158,7 +158,7 @@ SchTask* SchCreateTask(const char* name, size_t stackSize, SchTaskFn fn, void* c
     kphys_t stackPhys = PhysAlloc(stackPages, PHYS_REGION_TYPE_KERNEL_TASK_STACK, "TaskStack");
     uint8_t* stackVirt = VirtAlloc(stackPhys, stackPages, VIRT_PROT_READWRITE, VIRT_REGION_TYPE_TASK_STACK, "TaskStack");
     uint8_t* stack = stackVirt;
-    k_memset(stack, 0, stackPages * KPAGE_SIZE);
+    memset(stack, 0, stackPages * KPAGE_SIZE);
 
     // fill stack
     stack += stackSize - 32;

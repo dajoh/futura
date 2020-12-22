@@ -2,7 +2,7 @@
 
 static int s_errno = 0;
 
-int* __k_errno_location()
+int* __errno_location()
 {
     return &s_errno;
 }

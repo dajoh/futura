@@ -138,7 +138,7 @@ VirtSpace* VirtSpaceCreate()
     for (size_t i = 0; i < 768; i++)
     {
         PageTable* table = space->PageTables + i;
-        k_memset(table, 0, sizeof(PageTable));
+        memset(table, 0, sizeof(PageTable));
         space->PageDir->Entries[i] = pageTablePhys | PD_FLAG_READWRITE | PD_FLAG_PRESENT; // TODO: userspace flag
         pageTablePhys += KPAGE_SIZE;
     }

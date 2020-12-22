@@ -33,7 +33,7 @@ static size_t unsigned_to_str(char* buf, uintmax_t num, int base, bool uppercase
 	} while (num != 0);
 	*ptr = '\0';
 
-	k_strrev(buf);
+	strrev(buf);
 	return ptr - buf;
 }
 
@@ -42,14 +42,14 @@ static const char* str_to_unsigned(const char* buf, uintmax_t* num)
 	uintmax_t ret = 0;
 	const char* ptr = buf;
 
-	while (k_isdigit(*ptr))
+	while (isdigit(*ptr))
 		ret = ret * 10 + (*ptr++ - '0');
 
 	*num = ret;
 	return ptr;
 }
 
-int k_vsnprintf(char* buf, size_t cap, const char* fmt, va_list args)
+int vsnprintf(char* buf, size_t cap, const char* fmt, va_list args)
 {
 	#define write_c(c)     do { char __c = c; if (len++ < cap) buf[len - 1] = __c; } while (0)
 	#define write_s(s)     do { const char* __s = s; while (*__s) write_c(*__s++); } while (0)
@@ -179,7 +179,7 @@ int k_vsnprintf(char* buf, size_t cap, const char* fmt, va_list args)
 		case 's':
 		{
 			const char* arg = va_arg(args, const char*);
-			size_t arg_width = k_strlen(arg);
+			size_t arg_width = strlen(arg);
 			if (has_precision && precision < arg_width)
 				arg_width = (size_t)precision;
 			write_p0();
@@ -323,11 +323,11 @@ int k_vsnprintf(char* buf, size_t cap, const char* fmt, va_list args)
 	return len - 1;
 }
 
-int k_snprintf(char* buf, size_t cap, const char* fmt, ...)
+int snprintf(char* buf, size_t cap, const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	int ret = k_vsnprintf(buf, cap, fmt, args);
+	int ret = vsnprintf(buf, cap, fmt, args);
 	va_end(args);
 	return ret;
 }

@@ -36,7 +36,7 @@ void PhysInitializeEarly(multiboot_info_t* info)
     // Copy memory map from BIOS into our sbrk so we still have access to it after we switch to the new page directory
     PhysMemoryMapAddr = (kvirt_t)k_sbrk(info->mmap_length, 1);
     PhysMemoryMapSize = info->mmap_length;
-    k_memcpy((void*)PhysMemoryMapAddr, (void*)info->mmap_addr, info->mmap_length);
+    memcpy((void*)PhysMemoryMapAddr, (void*)info->mmap_addr, info->mmap_length);
 
     // Find max physical address
     kvirt_t mmapPtr = PhysMemoryMapAddr;

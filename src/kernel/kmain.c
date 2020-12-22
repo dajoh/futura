@@ -158,7 +158,7 @@ static void k_TestVirtio(const PciDeviceInfo* info, void* ctx)
     {
         // Prepare async call structure   
         AsyncCall asyncCall;
-        k_memset(&asyncCall, 0, sizeof(AsyncCall));
+        memset(&asyncCall, 0, sizeof(AsyncCall));
         asyncCall.Event = SchCreateEvent();
 
         // Submit async operation
